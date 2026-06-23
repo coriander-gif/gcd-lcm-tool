@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <title>GCD/LCM 計算ツール</title>
+    
+
+  </head>
+    
+  <body>
+  <!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GCD / LCM ツール（全機能）</title>
+<style>
+:root{--bg:#f0f2f5;--card:#fff;--primary:#007bff;--muted:#888}
+*{box-sizing:border-box}
+body{font-family:Inter, "Helvetica Neue", Arial, sans-serif;background:var(--bg);margin:0;padding:24px;display:flex;align-items:flex-start;justify-content:center;min-height:100vh}
+.container{width:100%;max-width:920px}
+.header{display:flex;gap:12px;align-items:center;margin-bottom:18px}
+.title{font-size:20px;color:#222;font-weight:700}
+.card{background:var(--card);padding:20px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,0.08);margin-bottom:18px}
+.row{display:flex;gap:12px;align-items:center}
+.input{width:100%;padding:10px;border:1px solid #e6e9ee;border-radius:8px;font-size:15px}
+.btn{padding:10px 14px;border-radius:8px;border:none;background:var(--primary);color:#fff;font-weight:600;cursor:pointer}
+.btn.ghost{background:#f6f7fb;color:#333;border:1px solid #e6e9ee}
+.small{font-size:13px;color:var(--muted)}
+.results{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.result-box{background:#fbfdff;padding:12px;border-radius:8px;border:1px solid #eef3ff}
+.label{font-size:13px;color:#666}
+.value{font-size:18px;color:var(--primary);font-weight:700;word-break:break-all;margin-top:6px}
+.flex-between{display:flex;justify-content:space-between;align-items:center}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.chip{background:#f1f5ff;padding:6px 8px;border-radius:999px;font-size:13px;color:#0b3b8c}
+.history-list{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.history-item{display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:8px;background:#fbfbfb;border:1px solid #eee}
+.copy-btn{background:#e9f2ff;border:1px solid #cfe6ff;color:#0366d6;padding:6px 8px;border-radius:6px;cursor:pointer}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.divisors{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.div-item{background:#fff6f0;border:1px solid #ffe6d6;padding:6px 8px;border-radius:6px;font-size:13px;color:#b04a00}
+.steps{background:#f8f9fb;padding:10px;border-radius:8px;border:1px dashed #e6eef9;max-height:220px;overflow:auto;margin-top:8px}
+.footer-note{font-size:13px;color:var(--muted);margin-top:8px}
+.range-input{width:100%;display:flex;gap:8px;align-items:center}
+.badge{background:#fff;border:1px solid #eee;padding:6px 8px;border-radius:6px;font-size:13px}
+.alert{background:#fff4f4;border:1px solid #ffd6d6;color:#8a1f1f;padding:8px;border-radius:8px;margin-top:8px}
+@media(max-width:760px){.results{grid-template-columns:1fr}.grid-3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="title">GCD / LCM ツール（全機能）</div>
+  </div>
+
+  <div class="card" id="mainCard">
+    <div style="display:flex;gap:12px;align-items:center;margin-bottom:8px">
+      <input id="inputNumbers" class="input" placeholder="例: 24, 36, 60 または ２４　３���　６０" value="24, 36, 60">
+      <button id="calcBtn" class="btn">一括計算</button>
+      <button id="clearBtn" class="btn ghost">入力クリア</button>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+      <div class="small">区切り: カンマ・スペース・改行対応</div>
+      <div style="flex:1"></div>
+      <button id="copyAllBtn" class="copy-btn">結果をコピー</button>
+    </div>
+
+    <div class="results" id="results" style="display:none">
+      <div class="result-box">
+        <div class="flex-between">
+          <div>
+            <div class="label">最大公約数</div>
+            <div id="gcdValue" class="value">-</div>
+          </div>
+          <div style="text-align:right">
+            <div class="label">全公約数</div>
+            <div id="allGcds" class="chips"></div>
+          </div>
+        </div>
+        <div style="margin-top:10px">
+          <div class="label">素因数分解（各入力）</div>
+          <div id="factorsArea" style="margin-top:8px"></div>
+        </div>
+      </div>
+
+      <div class="result-box">
+        <div class="flex-between">
+          <div>
+            <div class="label">最小公倍数</div>
+            <div id="lcmValue" class="value">-</div>
+          </div>
+          <div style="text-align:right">
+            <div class="label">公倍数（範囲指定）</div>
+            <div class="range-input" style="margin-top:6px">
+              <input id="multipleLimit" class="input" placeholder="上限を入力（例:1000）" style="padding:8px;width:120px">
+              <button id="showMultiples" class="btn ghost">表示</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:10px">
+          <div class="label">公倍数（上限内）</div>
+          <div id="commonMultiples" class="chips" style="margin-top:8px"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="stepsCard" class="card" style="display:none">
+      <div class="label">GCD 計算の途中ステップ</div>
+      <div id="gcdSteps" class="steps"></div>
+    </div>
+
+    <div id="divisorsCard" class="card" style="display:none">
+      <div class="label">各数の約数</div>
+      <div id="divisorsArea" style="margin-top:8px"></div>
+    </div>
+
+    <div class="card" style="display:flex;flex-direction:column">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="label">履歴</div>
+        <div style="display:flex;gap:8px">
+          <button id="saveHistory" class="btn ghost">履歴に保存</button>
+          <button id="clearHistory" class="btn ghost">履歴クリア</button>
+        </div>
+      </div>
+      <div id="historyList" class="history-list"></div>
+    </div>
+
+    <div id="message" class="footer-note"></div>
+  </div>
+</div>
+
+<script>
+const toHalfWidth = s => s.replace(/[！-～]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0)).replace(/　/g,' ').replace(/[，、。]/g,',');
+const sanitizeInput = raw => {
+  const t = toHalfWidth(raw).replace(/[^\d,\s\-＋＋\u002B\u2212]/g,'').replace(/\+/g,'').replace(/\u2212/g,'-');
+  return t.trim();
+};
+const parseNumbers = raw => {
+  const s = sanitizeInput(raw);
+  if(!s) return [];
+  return s.split(/[\s,]+/).map(x=>{
+    if(x==='') return null;
+    const sign = x.startsWith('-') ? -1 : 1;
+    const cleaned = x.replace(/^[+-]/,'');
+    if(cleaned==='') return null;
+    try{
+      return BigInt(cleaned) * BigInt(sign);
+    }catch(e){
+      return null;
+    }
+  }).filter(n=>n!==null && n!==undefined);
+};
+const abs = n => n < 0n ? -n : n;
+const gcdBig = (a,b,steps=null) => {
+  a = abs(a); b = abs(b);
+  if(a===0n && b===0n) return 0n;
+  while(b!==0n){
+    const r = a % b;
+    if(steps) steps.push(`${a.toString()} ÷ ${b.toString()} = ${ (a/b).toString() } 余り ${r.toString() }`);
+    a = b;
+    b = r;
+  }
+  return a;
+};
+const lcmBig = (a,b) => {
+  if(a===0n || b===0n) return 0n;
+  return (abs(a) / gcdBig(a,b)) * abs(b);
+};
+const sqrtBigInt = n => {
+  if(n<0n) return null;
+  if(n<2n) return n;
+  let x0 = n;
+  let x1 = (n >> 1n) + 1n;
+  while(x1 < x0){
+    x0 = x1;
+    x1 = ((n / x1) + x1) >> 1n;
+  }
+  return x0;
+};
+const factorize = n => {
+  const N = abs(n);
+  if(N===0n) return [['0',1]];
+  if(N===1n) return [['1',1]];
+  let x = N;
+  const res = new Map();
+  while(x % 2n === 0n){
+    res.set(2n,(res.get(2n)||0)+1);
+    x /= 2n;
+  }
+  let f = 3n;
+  const limit = sqrtBigInt(x) + 1n;
+  while(f <= limit && x > 1n){
+    while(x % f === 0n){
+      res.set(f,(res.get(f)||0)+1);
+      x /= f;
+    }
+    f += 2n;
+  }
+  if(x > 1n) res.set(x,(res.get(x)||0)+1);
+  const arr = [];
+  for(const [p,e] of res) arr.push([p.toString(), e]);
+  return arr;
+};
+const divisorsOf = n => {
+  const N = abs(n);
+  if(N===0n) return [];
+  const fac = factorize(N);
+  const res = [1n];
+  for(const [pStr,e] of fac){
+    const p = BigInt(pStr);
+    const cur = [];
+    for(const d of res){
+      let mul = 1n;
+      for(let i=0;i<e;i++){
+        mul *= p;
+        cur.push(d * mul);
+      }
+    }
+    res.push(...cur);
+  }
+  const uniq = Array.from(new Set(res)).sort((a,b)=> (a<b?-1:1));
+  return uniq;
+};
+const formatBig = n => {
+  if(typeof n === 'bigint') return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  return String(n);
+};
+const computeAll = (arr) => {
+  const nums = arr.map(x=>x);
+  let currentGcd = nums[0];
+  for(let i=1;i<nums.length;i++) currentGcd = gcdBig(currentGcd, nums[i]);
+  let currentLcm = nums[0];
+  for(let i=1;i<nums.length;i++) currentLcm = lcmBig(currentLcm, nums[i]);
+  return {gcd:currentGcd, lcm:currentLcm};
+};
+const getCommonMultiplesUpTo = (lcm, limit) => {
+  if(lcm===0n) return [];
+  const res = [];
+  const lim = BigInt(limit);
+  if(lim < lcm) return [];
+  let k = 1n;
+  while(lcm * k <= lim){
+    res.push(lcm * k);
+    k++;
+    if(res.length > 1000) break;
+  }
+  return res;
+};
+const saveHistoryToStorage = (key, value) => {
+  const raw = localStorage.getItem('gcd_lcm_history_v1');
+  const arr = raw ? JSON.parse(raw) : [];
+  arr.unshift({ts:Date.now(), q:key, r:value});
+  while(arr.length>30) arr.pop();
+  localStorage.setItem('gcd_lcm_history_v1', JSON.stringify(arr));
+};
+const loadHistoryFromStorage = () => {
+  const raw = localStorage.getItem('gcd_lcm_history_v1');
+  return raw ? JSON.parse(raw) : [];
+};
+const clearHistoryStorage = () => localStorage.removeItem('gcd_lcm_history_v1');
+
+const inputEl = document.getElementById('inputNumbers');
+const calcBtn = document.getElementById('calcBtn');
+const clearBtn = document.getElementById('clearBtn');
+const resultsEl = document.getElementById('results');
+const gcdValueEl = document.getElementById('gcdValue');
+const lcmValueEl = document.getElementById('lcmValue');
+const factorsArea = document.getElementById('factorsArea');
+const allGcdsEl = document.getElementById('allGcds');
+const commonMultiplesEl = document.getElementById('commonMultiples');
+const multipleLimitEl = document.getElementById('multipleLimit');
+const showMultiplesBtn = document.getElementById('showMultiples');
+const gcdStepsEl = document.getElementById('gcdSteps');
+const stepsCard = document.getElementById('stepsCard');
+const divisorsCard = document.getElementById('divisorsCard');
+const divisorsArea = document.getElementById('divisorsArea');
+const historyList = document.getElementById('historyList');
+const saveHistoryBtn = document.getElementById('saveHistory');
+const clearHistoryBtn = document.getElementById('clearHistory');
+const copyAllBtn = document.getElementById('copyAllBtn');
+const messageEl = document.getElementById('message');
+
+const renderHistory = () => {
+  historyList.innerHTML = '';
+  const arr = loadHistoryFromStorage();
+  if(arr.length===0){ historyList.innerHTML = '<div class="small">履歴はありません</div>'; return; }
+  for(const it of arr){
+    const d = new Date(it.ts);
+    const item = document.createElement('div');
+    item.className = 'history-item';
+    const left = document.createElement('div');
+    left.innerHTML = `<div style="font-size:13px;color:#333">${it.q}</div><div class="small">${d.toLocaleString()}</div>`;
+    const right = document.createElement('div');
+    const btn = document.createElement('button');
+    btn.className = 'btn ghost';
+    btn.textContent = '再計算';
+    btn.onclick = ()=>{ inputEl.value = it.q; calcBtn.click(); };
+    const del = document.createElement('button');
+    del.className = 'copy-btn';
+    del.textContent = '削除';
+    del.onclick = ()=>{
+      const raw = loadHistoryFromStorage().filter(x=>x.ts!==it.ts);
+      localStorage.setItem('gcd_lcm_history_v1', JSON.stringify(raw));
+      renderHistory();
+    };
+    right.appendChild(btn);
+    right.appendChild(del);
+    item.appendChild(left);
+    item.appendChild(right);
+    historyList.appendChild(item);
+  }
+};
+
+const showMessage = (txt, isError=false) => {
+  messageEl.textContent = txt || '';
+  messageEl.className = isError ? 'alert' : 'footer-note';
+};
+
+const renderFactors = (nums) => {
+  factorsArea.innerHTML = '';
+  for(const n of nums){
+    const wrap = document.createElement('div');
+    wrap.style.marginBottom = '8px';
+    const title = document.createElement('div');
+    title.className = 'small';
+    title.textContent = `${formatBig(n)} の素因数分解`;
+    const facs = factorize(n);
+    const line = facs.map(([p,e]) => `${p}${e>1?`^${e}`:''}`).join(' × ');
+    const val = document.createElement('div');
+    val.style.marginTop='6px';
+    val.textContent = line || '1';
+    wrap.appendChild(title);
+    wrap.appendChild(val);
+    factorsArea.appendChild(wrap);
+  }
+};
+
+const renderDivisors = (nums) => {
+  divisorsArea.innerHTML = '';
+  for(const n of nums){
+    const box = document.createElement('div');
+    box.style.marginBottom='10px';
+    const title = document.createElement('div');
+    title.className='small';
+    title.textContent = `${formatBig(n)} の約数`;
+    const divs = divisorsOf(n);
+    const container = document.createElement('div');
+    container.className='divisors';
+    for(const d of divs){
+      const el = document.createElement('div');
+      el.className='div-item';
+      el.textContent = formatBig(d);
+      container.appendChild(el);
+    }
+    box.appendChild(title);
+    box.appendChild(container);
+    divisorsArea.appendChild(box);
+  }
+};
+
+const renderAllGcds = (gcd) => {
+  allGcdsEl.innerHTML = '';
+  if(gcd===0n){ allGcdsEl.textContent = '-'; return; }
+  const divs = divisorsOf(gcd);
+  for(const d of divs){
+    const el = document.createElement('div');
+    el.className='chip';
+    el.textContent = formatBig(d);
+    allGcdsEl.appendChild(el);
+  }
+};
+
+const renderMultiples = (arr) => {
+  commonMultiplesEl.innerHTML = '';
+  if(arr.length===0){ commonMultiplesEl.textContent = '-'; return; }
+  for(const m of arr){
+    const el = document.createElement('div');
+    el.className='chip';
+    el.textContent = formatBig(m);
+    commonMultiplesEl.appendChild(el);
+  }
+};
+
+const renderSteps = (steps) => {
+  gcdStepsEl.innerHTML = '';
+  if(!steps || steps.length===0){ gcdStepsEl.textContent = '-'; return; }
+  for(const s of steps){
+    const p = document.createElement('div');
+    p.textContent = s;
+    gcdStepsEl.appendChild(p);
+  }
+};
+
+calcBtn.addEventListener('click', ()=>{
+  showMessage('');
+  const nums = parseNumbers(inputEl.value);
+  if(nums.length < 2){ showMessage('2つ以上の整数を入力してください。', true); return; }
+  const nonZero = nums.filter(n=>n!==0n);
+  const steps = [];
+  const gcdAll = nums.reduce((acc,cur,idx)=> idx===0 ? cur : gcdBig(acc,cur,steps));
+  const lcmAll = nums.reduce((acc,cur,idx)=> idx===0 ? cur : lcmBig(acc,cur));
+  resultsEl.style.display = 'grid';
+  stepsCard.style.display = 'block';
+  divisorsCard.style.display = 'block';
+  gcdValueEl.textContent = formatBig(gcdAll);
+  lcmValueEl.textContent = formatBig(lcmAll);
+  renderFactors(nums);
+  renderAllGcds(gcdAll);
+  renderDivisors(nums);
+  renderSteps(steps);
+  commonMultiplesEl.innerHTML = '-';
+  showMessage('計算完了');
+});
+
+clearBtn.addEventListener('click', ()=>{ inputEl.value=''; resultsEl.style.display='none'; stepsCard.style.display='none'; divisorsCard.style.display='none'; showMessage('入力をクリアしました'); });
+
+showMultiplesBtn.addEventListener('click', ()=>{
+  const limitRaw = multipleLimitEl.value.trim();
+  if(!limitRaw){ showMessage('上限を入力してください。', true); return; }
+  let limit;
+  try{ limit = BigInt(limitRaw.replace(/,/g,'')); }catch(e){ showMessage('上限は整数で入力してください。', true); return; }
+  const gcdText = gcdValueEl.textContent;
+  const lcmText = lcmValueEl.textContent;
+  if(lcmText==='-' ){ showMessage('先に計算を実行してください。', true); return; }
+  const lcm = BigInt(lcmText.replace(/,/g,''));
+  const arr = getCommonMultiplesUpTo(lcm, limit);
+  renderMultiples(arr);
+  showMessage(`上限 ${formatBig(limit)} までの公倍数を表示しました`);
+});
+
+saveHistoryBtn.addEventListener('click', ()=>{
+  const q = inputEl.value.trim();
+  if(!q){ showMessage('保存する入力がありません。', true); return; }
+  const r = {gcd:gcdValueEl.textContent, lcm:lcmValueEl.textContent};
+  saveHistoryToStorage(q, r);
+  renderHistory();
+  showMessage('履歴に保存しました');
+});
+
+clearHistoryBtn.addEventListener('click', ()=>{
+  clearHistoryStorage();
+  renderHistory();
+  showMessage('履歴をクリアしました');
+});
+
+copyAllBtn.addEventListener('click', async ()=>{
+  if(gcdValueEl.textContent==='-'){ showMessage('先に計算を実行してください。', true); return; }
+  const text = [
+    `入力: ${inputEl.value}`,
+    `GCD: ${gcdValueEl.textContent}`,
+    `LCM: ${lcmValueEl.textContent}`,
+    `素因数分解:`,
+    Array.from(factorsArea.querySelectorAll('div')).map(d=>d.textContent).join('\n'),
+  ].join('\n');
+  try{
+    await navigator.clipboard.writeText(text);
+    showMessage('結果をクリップボードにコピーしました');
+  }catch(e){
+    showMessage('コピーに失敗しました', true);
+  }
+});
+
+inputEl.addEventListener('input', (e)=>{
+  const pos = inputEl.selectionStart;
+  const before = inputEl.value;
+  const converted = toHalfWidth(before);
+  if(converted !== before){
+    inputEl.value = converted;
+    inputEl.setSelectionRange(pos, pos);
+  }
+});
+
+renderHistory();
+</script>
+</body>
+</html>
+    
+  </body>
+  
+</html>
